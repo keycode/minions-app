@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Plus, Eye, Pencil, Trash2 } from 'lucide-react';
+import { Search, Plus, Eye, Pencil, Trash2, Wrench, ShoppingCart } from 'lucide-react';
 
 // Hooks de Redux y Acciones
 import { useAppDispatch, useAppSelector } from '../app/hooks';
@@ -9,7 +9,7 @@ import {
   deleteMinion, 
   setSearchFilter, 
   setLanguageFilter, 
-  setSkillsFilter 
+  setSkillsFilter , addToWorkshop
 } from '../features/minions/minionsSlice';
 import { useMinionFilters } from '../hooks/useMinionFilters';
 
@@ -24,8 +24,7 @@ export const Dashboard: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
 
   // Obtener estado global de Redux
-  const { data, status, filters } = useAppSelector((state) => state.minions);
-
+const { data, status, filters, workshop } = useAppSelector((state) => state.minions);
   // 1. Cargar datos (Efecto secundario)
   // Requisito: "Implementa la paginación... utilizando el parámetro page de la API"
   useEffect(() => {
@@ -48,6 +47,13 @@ export const Dashboard: React.FC = () => {
   // Calculamos total de páginas para pintar los botones correctos
   const totalPages = Math.ceil(filteredMinions.length / ITEMS_PER_PAGE);
   // Manejadores de eventos
+
+  const handleAddToWorkshop = (minion: any) => {
+    dispatch(addToWorkshop(minion));
+    // Feedback visual opcional (o un toast)
+  };
+
+  const isInWorkshop = (id: string | number) => workshop.some(m => m.id === id);
   const handleDelete = (id: string | number) => {
     // Requisito: "Confirmación de eliminación... muestra un mensaje"
     if (window.confirm('¿Seguro que quieres eliminar a este Minion de tu malvado plan?')) {
@@ -65,8 +71,8 @@ export const Dashboard: React.FC = () => {
       <div className="max-w-7xl mx-auto mb-8">
         <h1 className="text-3xl font-bold text-blue-900 mb-6">Gestión de Minions</h1>
 
-        {/* --- BARRA DE HERRAMIENTAS (Filtros y Botones) --- */}
-        {/* Requisito: "Buscador... Filtrado por idioma... y Habilidades" */}
+ 
+      
         <div className="flex flex-col xl:flex-row gap-4 justify-between items-start xl:items-center bg-white p-4 rounded-lg shadow-sm border border-gray-100">
           
           <div className="flex flex-col md:flex-row gap-4 w-full xl:w-auto items-center">
@@ -83,7 +89,7 @@ export const Dashboard: React.FC = () => {
             </div>
 
             {/* 2. Filtro de Idioma (Select simple) */}
-            <div className="w-full md:w-56">
+            <div className="w-full md:w-48">
                 <select 
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-white text-gray-700 focus:ring-2 focus:ring-blue-500 outline-none appearance-none"
                     value={filters.language}
@@ -104,14 +110,25 @@ export const Dashboard: React.FC = () => {
                 onChange={(selected) => dispatch(setSkillsFilter(selected))}
             />
           </div>
-
+      <button 
+                onClick={() => navigate('/workshop')}
+                className="flex items-center gap-2  bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-2 px-6 rounded-lg shadow-md transition-transform"
+            >
+                <Wrench size={20} />
+                Ver Taller de Misión
+                {workshop.length > 0 && (
+                    <span className="relative -top-2 -right-4 bg-red-500 text-white text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full border-2 border-white">
+                        {workshop.length}
+                    </span>
+                )}
+            </button>
           {/* Botón de Añadir */}
           <button 
             onClick={() => navigate('/minions/new')}
             className="flex items-center gap-2 bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-2 px-6 rounded-lg shadow-md transition-transform active:scale-95 w-full md:w-auto justify-center"
           >
             <Plus size={20} />
-            Añadir nuevo minion
+            Añadir nuevo
           </button>
         </div>
       </div>
@@ -154,6 +171,24 @@ export const Dashboard: React.FC = () => {
                         <button onClick={() => handleDelete(minion.id)} className="hover:text-red-600" title="Eliminar">
                             <Trash2 size={18} />
                         </button>
+
+ 
+                        <button 
+                            onClick={() => handleAddToWorkshop(minion)}
+                            disabled={isInWorkshop(minion.id)}
+                            className={`ml-2 flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold transition-colors
+                                ${isInWorkshop(minion.id) 
+                                    ? 'bg-green-100 text-green-700 cursor-default' 
+                                    : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                                }`}
+                        >
+                            {isInWorkshop(minion.id) ? (
+                                'En taller'
+                            ) : (
+                                <><ShoppingCart size={14} /> Añadir</>
+                            )}
+                        </button>
+
                       </div>
                     </td>
                   </tr>

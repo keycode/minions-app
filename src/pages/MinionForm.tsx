@@ -82,7 +82,8 @@ export const MinionForm: React.FC = () => {
                         </button>
                     </>
                 )}
-            </div>
+                  </div>
+                  
         </div>
 
         {/* TARJETA PRINCIPAL */}

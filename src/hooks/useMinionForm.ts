@@ -144,7 +144,7 @@ const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElemen
      if (!formData.nombre) return alert("Escribe un nombre primero.");
      if (!formData.id || formData.id === 0) return alert("Guarda el minion primero.");
 
-     const prompt = `Thumbnail 300x300, minion llamado ${formData.nombre}, idioma ${formData.idioma}, habilidades ${formData.habilidades.join(', ')}. Estilo cartoon 3d render sin añadir ningun texto solo la imagen del Minion`;
+     const prompt = `Thumbnail 300x300, minion llamado ${formData.nombre}, idioma ${formData.idioma}, habilidades ${formData.habilidades.join(', ')}. Estilo cartoon 3d render. No añadir ningun texto solo la imagen del Minion`;
 
      setIsGenerating(true);
      try {

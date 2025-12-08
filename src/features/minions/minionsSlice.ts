@@ -18,7 +18,11 @@ interface MinionsState {
   };
   // NUEVO: Almacenes de persistencia local
   edits: Record<string, Minion>; // Diccionario de IDs -> Minion Editado
-  created: Minion[];             // Array de Minions creados manualmente
+  created: Minion[];
+  
+  workshop: Minion[];      // El "Carrito"
+  groupImage: string | null; // URL de la foto de grupo generada
+  isGeneratingGroup: boolean;// Array de Minions creados manualmente
 }
 
 const initialState: MinionsState = {
@@ -30,8 +34,11 @@ data: [],
     language: '',
     skills: [],
  },
-  edits: {},   // Inicialmente vacío
-  created: [], // Inicialmente vacío
+  edits: {},   
+  created: [], 
+  workshop: [],
+  groupImage: null,
+  isGeneratingGroup: false
 };
 
  
@@ -80,6 +87,22 @@ const minionsSlice = createSlice({
          minion.img = action.payload.url;
        }
     },
+   
+   addToWorkshop: (state, action: PayloadAction<Minion>) => {
+      // Evitar duplicados
+      const exists = state.workshop.find(m => m.id === action.payload.id);
+      if (!exists) {
+        state.workshop.push(action.payload);
+      }
+    },
+    removeFromWorkshop: (state, action: PayloadAction<string | number>) => {
+      state.workshop = state.workshop.filter(m => m.id !== action.payload);
+    },
+    clearWorkshop: (state) => {
+      state.workshop = [];
+      state.groupImage = null;
+    },
+   
   
     // Filtros
     setSearchFilter: (state, action: PayloadAction<string>) => { state.filters.search = action.payload; },
@@ -122,7 +145,19 @@ const minionsSlice = createSlice({
       .addCase(fetchMinions.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.error.message || 'Error cargando minions';
-      });
+      })
+      
+      .addCase(generateGroupImage.pending, (state) => {
+      state.isGeneratingGroup = true;
+    })
+    .addCase(generateGroupImage.fulfilled, (state, action) => {
+      state.isGeneratingGroup = false;
+      state.groupImage = action.payload; // Guardamos la URL
+    }).addCase(generateGroupImage.rejected, (state) => {
+      state.isGeneratingGroup = false;
+      alert("Error generando la foto de grupo");
+    });
+      ;
   },
 });
 
@@ -149,12 +184,38 @@ export const generateMinionImage = createAsyncThunk(
   }
 );
 
+
+
+export const generateGroupImage = createAsyncThunk(
+  'minions/generateGroupImage',
+  async (selectedMinions: Minion[]) => {
+
+    const descriptions = selectedMinions.map(m => `${m.nombre} (${m.habilidades.join(', ')})`).join(', ');
+    const prompt = `A complex, cinematic photograph integrating elements from these Minions:  ${descriptions} .The entire image is rendered in the specific visual style of Minions and add the iconic 'Shrink Ray' (Rayo Deductor) weapon from the Minions / Despicable Me franchise. High quality 3D render style, yellow skin, denim overalls.`;
+    
+    // Usamos un ID especial para la foto de grupo
+    const groupId = 'mission_squad_' + Date.now();
+
+    const response = await axios.post('/proxy.php', {
+      id: groupId, // ID único para guardar el archivo
+      prompt: prompt
+    });
+
+    if (response.data.success) {
+      return response.data.url;
+    } else {
+      throw new Error(response.data.error);
+    }
+  }
+);
+
 export const { 
   addMinion, 
   updateMinion, 
   deleteMinion, 
   setSearchFilter, 
   setLanguageFilter, 
-  setSkillsFilter , updateMinionPhoto
+  setSkillsFilter, updateMinionPhoto,
+  addToWorkshop, removeFromWorkshop, clearWorkshop
 } = minionsSlice.actions;
 export default minionsSlice.reducer;
