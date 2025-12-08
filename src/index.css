@@ -1,3 +1,35 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+
+@font-face {
+    font-family: 'Bauhaus-Heavy';
+    src: url('./assets/Bauhaus-Heavy-Bold.eot');
+    src: url('./assets/Bauhaus-Heavy-Bold.eot?#iefix') format('embedded-opentype'),
+        url('./assets/Bauhaus-Heavy-Bold.woff2') format('woff2'),
+        url('./assets/Bauhaus-Heavy-Bold.woff') format('woff'),
+        url('./assets/Bauhaus-Heavy-Bold.svg#Bauhaus-Heavy-Bold') format('svg');
+    font-weight: 900;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Bauhaus';
+    src: url('./assets/Bauhaus-Thin.eot');
+    src: url('./assets/Bauhaus-Thin.eot?#iefix') format('embedded-opentype'),
+        url('./assets/Bauhaus-Thin.woff2') format('woff2'),
+        url('./assets/Bauhaus-Thin.woff') format('woff'),
+        url('./assets/Bauhaus-Thin.svg#Bauhaus-Thin') format('svg');
+
+    font-style: normal;
+    font-display: swap;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: "Baumans", sans-serif !important;
+    -webkit-font-smoothing: antialiased;
+}

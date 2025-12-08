@@ -1,83 +1,47 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react'; 
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Save, Pencil, X } from 'lucide-react';
+import { ArrowLeft, Save, Pencil, X, Sparkles, Loader2 } from 'lucide-react';
 
-// Redux & Tipos
-import { useAppDispatch, useAppSelector } from '../app/hooks';
-import { addMinion, updateMinion } from '../features/minions/minionsSlice';
-import type { Minion } from '../models/minion';
 
-// Componentes
 import { useMinionForm } from '../hooks/useMinionForm';
 import { MultiSelect } from '../components/MultiSelect';
+
+const timestampToString = (ts: number): string => {
+    if (!ts) return '';
+    // Multiplicamos por 1000 porque JS usa milisegundos
+    return new Date(ts * 1000).toISOString().split('T')[0];
+};
 
 export const MinionForm: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const dispatch = useAppDispatch();
-  const minions = useAppSelector((state) => state.minions.data);
-
-  // Determinar modo: Si no hay ID, es "Crear". Si hay ID, es "Ver" o "Editar".
-  const isNew = !id;
-  
-  // Estado local para el modo Edición (si es nuevo, nace editando)
-  const [isEditing, setIsEditing] = useState(isNew);
-
-  // Estado del Formulario
-  const [formData, setFormData] = useState<Minion>({
-    id: Date.now(), 
-    nombre: '',
-    bio: '',
-    birth: '',
-    idioma: 'Minionés Español', // Valor por defecto
-    habilidades: [],
-    img: 'https://m.media-amazon.com/images/I/71eY2B9sCmL._AC_SL1500_.jpg' // Foto por defecto
-  });
-
-  // Cargar datos si estamos viendo/editando uno existente
-  useEffect(() => {
-    if (!isNew && id) {
-      const foundMinion = minions.find((m) => m.id.toString() === id);
-      if (foundMinion) {
-        setFormData(foundMinion);
-      } else {
-        // Si no existe (ej: recargar página con ID falso), volver al inicio
-        navigate('/minions');
-      }
-    }
-  }, [id, minions, isNew, navigate]);
-
-  // Manejo de cambios en Inputs
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  // Guardar (Create o Update)
-  const handleSave = () => {
-    if (!formData.nombre) return alert('El nombre es obligatorio');
-
-    if (isNew) {
-      // Crear nuevo
-      dispatch(addMinion({ ...formData, id: Date.now() })); // Generamos ID único real
-    } else {
-      // Actualizar existente
-      dispatch(updateMinion(formData));
-    }
+    const DEFAULT_IMAGE = '/uploads/default.png';
     
-    // Volver al listado
-    navigate('/minions');
-  };
 
-  // Listas para selects
+  const { 
+    formData, 
+    isNew, 
+    isEditing, 
+      setIsEditing, 
+    isGenerating,
+    handleChange, 
+    handleSkillsChange,  
+    saveMinion,         
+    cancelEdit,          
+    handleGenerateAiImage  
+  } = useMinionForm(id);
+
+  // Listas estáticas para la UI
   const languageOptions = ['Minionés Español', 'Minionés Inglés', 'Minionés Portugués', 'Minionés Cantonés'];
-  const habilidadesOptions = ['Mecánico', 'Físico', 'Químico', 'Arquitecto', 'Músico', 'Villano'];
+    const habilidadesOptions = ['Mecánico', 'Físico', 'Químico', 'Arquitecto', 'Músico', 'Villano'];
+    
+    //const hasGeneratedImage = formData.img?.includes('/uploads/minion_images/');
 
   return (
     <div className="min-h-screen bg-gray-50 p-6 font-sans">
       <div className="max-w-5xl mx-auto">
         
-        {/* HEADER: Botón Volver y Título */}
+        {/* HEADER */}
         <div className="flex justify-between items-center mb-6">
             <div className="flex items-center gap-4">
                 <button onClick={() => navigate('/minions')} className="flex items-center gap-2 text-gray-500 hover:text-blue-900 font-medium">
@@ -88,9 +52,9 @@ export const MinionForm: React.FC = () => {
                 </h1>
             </div>
             
-            {/* Botones de Acción (Editar / Guardar / Cancelar) */}
+            {/* Botones de Acción */}
             <div className="flex gap-2">
-                {!isEditing && !isNew && (
+               {!isEditing && !isNew && (
                     <button 
                         onClick={() => setIsEditing(true)}
                         className="flex items-center gap-2 bg-yellow-400 text-black px-6 py-2 rounded-lg font-bold shadow-sm hover:bg-yellow-500"
@@ -102,14 +66,17 @@ export const MinionForm: React.FC = () => {
                 {isEditing && (
                     <>
                         <button 
-                            onClick={() => isNew ? navigate('/minions') : setIsEditing(false)}
-                            className="flex items-center gap-2 bg-white border border-gray-300 text-gray-600 px-4 py-2 rounded-lg font-medium hover:bg-gray-100"
+                            onClick={cancelEdit}
+                            // Deshabilitamos cancelar si se está generando la imagen para evitar inconsistencias
+                            disabled={isGenerating}
+                            className="flex items-center gap-2 bg-white border border-gray-300 text-gray-600 px-4 py-2 rounded-lg font-medium hover:bg-gray-100 disabled:opacity-50"
                         >
                             <X size={18} /> Cancelar
                         </button>
                         <button 
-                            onClick={handleSave}
-                            className="flex items-center gap-2 bg-blue-600 text-white px-6 py-2 rounded-lg font-bold shadow-sm hover:bg-blue-700"
+                            onClick={saveMinion}
+                            disabled={isGenerating} // No guardar mientras genera
+                            className="flex items-center gap-2 bg-yellow-400 text-black px-6 py-2 rounded-lg font-bold shadow-sm hover:bg-yellow-500 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             <Save size={18} /> Guardar
                         </button>
@@ -118,22 +85,60 @@ export const MinionForm: React.FC = () => {
             </div>
         </div>
 
+        {/* TARJETA PRINCIPAL */}
         <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 flex flex-col md:flex-row">
             
             {/* COLUMNA IZQUIERDA: Foto */}
             <div className="w-full md:w-1/3 bg-gray-50 p-8 flex flex-col items-center justify-start border-r border-gray-100">
-                      <div className="w-48 h-48 rounded-full overflow-hidden border-4 border-yellow-400 shadow-inner mb-4 bg-white">
-                          {isEditing && (
-                  <button 
-        type="button" // Importante type="button" para no enviar el form (submit)
-        onClick={handleGenerateAiImage}
-        className="mt-4 flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded shadow hover:bg-purple-700 transition"
-    >
-        ✨ Generar con Nano Banana
-    </button>
-                )}
-                    <img src={formData.img} alt="Minion" className="w-full h-full object-contain" />
+                <div className="w-64 h-64 rounded-full overflow-hidden border-4 border-yellow-400 shadow-inner mb-4 bg-white relative">
+                   <img 
+                        src={formData.img || DEFAULT_IMAGE} 
+                        alt="Minion" 
+                        className="w-full h-full object-contain"
+                        // AÑADIR ESTO: Si la imagen falla, pon la default
+                        onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            // Evita bucle infinito si la default también falla
+                            if (target.src !== DEFAULT_IMAGE) {
+                                target.src = DEFAULT_IMAGE;
+                            }
+                        }}
+                    />
+                    
+                    {/* Overlay opcional mientras carga para dar feedback visual sobre la foto */}
+                    {isGenerating && (
+                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                            <Loader2 className="text-white animate-spin" size={32} />
+                        </div>
+                    )}
                 </div>
+                
+           
+               {isEditing   && (
+                    <button 
+                        type="button" 
+                        onClick={handleGenerateAiImage}
+                        disabled={isGenerating} // Deshabilita click
+                        className={`mt-2 mb-4 w-full flex items-center justify-center gap-2 text-black text-sm font-bold py-2 px-4 rounded-lg shadow transition-all
+                            ${isGenerating 
+                                ? 'bg-gray-400 cursor-not-allowed' 
+                                : 'bg-yellow-400  hover:bg-yellow-400 active:scale-95'
+                            }`}
+                    >
+                        {isGenerating ? (
+                            <>
+                                <Loader2 size={16} className="animate-spin" /> 
+                                Creando Minion...
+                            </>
+                        ) : (
+                            <>
+                                <Sparkles size={16} /> 
+                                Invocar a Nano Banana
+                            </>
+                        )}
+                    </button>
+                )}
+
                 {/* Input URL foto (solo editable) */}
                 {isEditing && (
                     <div className="w-full">
@@ -143,6 +148,7 @@ export const MinionForm: React.FC = () => {
                             name="img"
                             value={formData.img}
                             onChange={handleChange}
+                            disabled={isGenerating}
                             className="w-full text-xs p-2 border rounded mt-1"
                             placeholder="http://..."
                         />
@@ -150,96 +156,97 @@ export const MinionForm: React.FC = () => {
                 )}
             </div>
 
-            {/* COLUMNA DERECHA: Datos */}
+  
+            {/* COLUMNA DERECHA: DATOS  */}
             <div className="w-full md:w-2/3 p-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     
-                    {/* Campo: Nombre */}
+                    {/* NOMBRE */}
                     <div className="col-span-2">
                         <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Nombre</label>
-                        <input 
-                            type="text" 
-                            name="name"
-                            disabled={!isEditing}
-                            value={formData.nombre}
-                            onChange={handleChange}
-                            className={`w-full p-3 rounded-lg border ${isEditing ? 'border-gray-300 bg-white focus:ring-2 focus:ring-blue-500' : 'border-transparent bg-gray-50 font-bold text-lg'}`}
-                        />
+                        <input type="text" name="nombre" disabled={!isEditing || isGenerating} value={formData.nombre} onChange={handleChange} className={`w-full p-3 rounded-lg border ${isEditing ? 'border-gray-300 bg-white' : 'border-transparent bg-gray-50 font-bold text-lg'}`} />
                     </div>
 
-                    {/* Campo: Idioma */}
+                    {/* IDIOMA */}
                     <div>
                         <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Idioma</label>
                         {isEditing ? (
-                            <select 
-                                name="side"
-                                value={formData.idioma}
-                                onChange={handleChange}
-                                className="w-full p-3 border border-gray-300 rounded-lg bg-white"
-                            >
+                            <select name="idioma" value={formData.idioma} onChange={handleChange} disabled={isGenerating} className="w-full p-3 border border-gray-300 rounded-lg bg-white">
                                 {languageOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                             </select>
-                        ) : (
-                            <div className="p-3 bg-gray-50 rounded-lg border border-transparent text-gray-700">{formData.habilidades}</div>
-                        )}
+                        ) : (<div className="p-3 bg-gray-50 rounded-lg border border-transparent text-gray-700">{formData.idioma}</div>)}
                     </div>
 
-                    {/* Campo: Fecha Nacimiento */}
+                    {/* FECHA (Conversión visual) */}
                     <div>
                         <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Fecha de Cumpleaños</label>
                         <input 
                             type="date" 
-                            name="birth"
-                            disabled={!isEditing}
-                            value={formData.birth}
+                            name="fecha_cumpleanos" // Nombre coincide con JSON
+                            disabled={!isEditing || isGenerating}
+                            // CONVERTIMOS EL TIMESTAMP A STRING PARA QUE EL INPUT LO ENTIENDA
+                            value={timestampToString(formData.fecha_cumpleanos)}
                             onChange={handleChange}
                             className={`w-full p-3 rounded-lg border ${isEditing ? 'border-gray-300 bg-white' : 'border-transparent bg-gray-50 text-gray-700'}`}
                         />
                     </div>
 
-                    {/* Campo: Habilidades (Reusamos MultiSelect si es edición, o lista tags si es ver) */}
+                    {/* HABILIDADES */}
                     <div className="col-span-2">
                         <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Habilidades</label>
                         {isEditing ? (
-                            <MultiSelect 
-                                label="Seleccionar habilidades"
-                                options={habilidadesOptions}
-                                selected={formData.habilidades}
-                                onChange={(skills) => setFormData(prev => ({ ...prev, skills }))}
-                            />
+                            <MultiSelect label="Seleccionar habilidades" options={habilidadesOptions} selected={formData.habilidades} onChange={handleSkillsChange} />
                         ) : (
                             <div className="flex flex-wrap gap-2 mt-2">
-                                {formData.habilidades.map(habilida => (
-                                    <span key={habilida} className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium border border-yellow-200">
-                                        {habilida}
-                                    </span>
-                                ))}
-                                {formData.habilidades.length === 0 && <span className="text-gray-400 italic">Sin habilidades... todavía</span>}
+                                {formData.habilidades.map(skill => <span key={skill} className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium border border-yellow-200">{skill}</span>)}
                             </div>
                         )}
                     </div>
 
-                    {/* Campo: Descripción / Bio */}
+                    {/* EXPERIENCIA Y ESTADO */}
+                    <div>
+                        <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Experiencia (Años)</label>
+                        <input type="number" name="experiencia" min="0" disabled={!isEditing || isGenerating} value={formData.experiencia} onChange={handleChange} className={`w-full p-3 rounded-lg border ${isEditing ? 'border-gray-300 bg-white' : 'border-transparent bg-gray-50 text-gray-700'}`} />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Estado</label>
+                        <input type="text" name="estado" disabled={!isEditing || isGenerating} value={formData.estado} onChange={handleChange} className={`w-full p-3 rounded-lg border ${isEditing ? 'border-gray-300 bg-white' : 'border-transparent bg-gray-50 text-gray-700'}`} />
+                    </div>
+
+                    {/* DESCRIPCIÓN (Antes BIO) */}
                     <div className="col-span-2">
                         <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Descripción</label>
-                        <textarea 
-                            name="bio"
-                            disabled={!isEditing}
-                            value={formData.bio}
-                            onChange={handleChange}
-                            rows={4}
-                            className={`w-full p-3 rounded-lg border ${isEditing ? 'border-gray-300 bg-white' : 'border-transparent bg-gray-50 text-gray-600 italic'}`}
+                        <textarea name="descripcion" disabled={!isEditing || isGenerating} value={formData.descripcion} onChange={handleChange} rows={3} className={`w-full p-3 rounded-lg border ${isEditing ? 'border-gray-300 bg-white' : 'border-transparent bg-gray-50 text-gray-600 italic'}`} />
+                    </div>
+
+                    {/* ALTURA Y OJOS */}
+                    <div>
+                        <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Altura (cm)</label>
+                        <input 
+                            type="number" // Ahora es Number
+                            name="altura" 
+                            disabled={!isEditing || isGenerating} 
+                            value={formData.altura} 
+                            onChange={handleChange} 
+                            className={`w-full p-3 rounded-lg border ${isEditing ? 'border-gray-300 bg-white' : 'border-transparent bg-gray-50 text-gray-700'}`} 
                         />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Cantidad de Ojos</label>
+                        <input type="number" name="numero_ojos" min="1" max="3" disabled={!isEditing || isGenerating} value={formData.numero_ojos} onChange={handleChange} className={`w-full p-3 rounded-lg border ${isEditing ? 'border-gray-300 bg-white' : 'border-transparent bg-gray-50 text-gray-700'}`} />
+                    </div>
+
+                    {/* COMIDA FAVORITA Y PERSONALIDAD */}
+                    <div>
+                        <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Comida Favorita</label>
+                        <input type="text" name="comida_favorita" disabled={!isEditing || isGenerating} value={formData.comida_favorita} onChange={handleChange} className={`w-full p-3 rounded-lg border ${isEditing ? 'border-gray-300 bg-white' : 'border-transparent bg-gray-50 text-gray-700'}`} />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-bold text-gray-400 uppercase mb-1">Personalidad</label>
+                        <input type="text" name="personalidad" disabled={!isEditing || isGenerating} value={formData.personalidad} onChange={handleChange} className={`w-full p-3 rounded-lg border ${isEditing ? 'border-gray-300 bg-white' : 'border-transparent bg-gray-50 text-gray-700'}`} />
                     </div>
 
                 </div>
-                
-                {/* Nota informativa estilo PDF */}
-                <div className="mt-8 p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded-r text-sm text-yellow-800">
-                    <strong>Información del Sistema:</strong>
-                    <p className="mt-1">Esta ficha contiene toda la información relevante del minion. Para editar los campos, haz clic en el botón "Editar" en la parte superior derecha.</p>
-                </div>
-
             </div>
         </div>
       </div>

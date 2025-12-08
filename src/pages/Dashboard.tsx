@@ -60,7 +60,7 @@ export const Dashboard: React.FC = () => {
   const skillOptions = ['Mecánico', 'Físico', 'Químico', 'Arquitecto', 'Músico'];
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6 font-sans text-gray-800">
+    <div className="min-h-screen bg-gray-50 p-6  text-gray-800">
       {/* HEADER y TÍTULO */}
       <div className="max-w-7xl mx-auto mb-8">
         <h1 className="text-3xl font-bold text-blue-900 mb-6">Gestión de Minions</h1>

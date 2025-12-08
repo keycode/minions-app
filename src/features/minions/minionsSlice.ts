@@ -16,6 +16,9 @@ interface MinionsState {
     language: string;
     skills: string[];
   };
+  // NUEVO: Almacenes de persistencia local
+  edits: Record<string, Minion>; // Diccionario de IDs -> Minion Editado
+  created: Minion[];             // Array de Minions creados manualmente
 }
 
 const initialState: MinionsState = {
@@ -26,7 +29,9 @@ data: [],
     search: '',
     language: '',
     skills: [],
-  },
+ },
+  edits: {},   // Inicialmente vacío
+  created: [], // Inicialmente vacío
 };
 
  
@@ -43,38 +48,43 @@ const minionsSlice = createSlice({
   name: 'minions',
   initialState,
   reducers: {
-    // CRUD LOCAL (Requisito: persistencia en sesión Redux) [cite: 107]
-    addMinion: (state, action: PayloadAction<Minion>) => {
-      state.data.unshift(action.payload); // Añadir al principio
+   addMinion: (state, action: PayloadAction<Minion>) => {
+      state.created.unshift(action.payload); 
+      // También lo mostramos en data inmediatamente
+      state.data.unshift(action.payload);
     },
+
+    // --- UPDATE: Guardamos en 'edits' y actualizamos 'data' ---
     updateMinion: (state, action: PayloadAction<Minion>) => {
-      const index = state.data.findIndex((m) => m.id === action.payload.id);
+      const minion = action.payload;
+      // 1. Guardar en persistencia (Diccionario por ID)
+      state.edits[minion.id] = minion;
+
+      // 2. Actualizar visualmente si está en pantalla ahora mismo
+      const index = state.data.findIndex((m) => m.id === minion.id);
       if (index !== -1) {
-        state.data[index] = action.payload;
+        state.data[index] = minion;
       }
     },
+
+    // --- DELETE: Lo quitamos de todas partes ---
     deleteMinion: (state, action: PayloadAction<string | number>) => {
-      state.data = state.data.filter((m) => m.id !== action.payload);
+      const id = action.payload;
+      state.data = state.data.filter((m) => m.id !== id);
+      state.created = state.created.filter((m) => m.id !== id);
+      // Opcional: Podrías necesitar un array 'deleted' si quieres que no reaparezcan al paginar
     },
-    // Filtros
-    setSearchFilter: (state, action: PayloadAction<string>) => {
-      state.filters.search = action.payload;
-    },
-    updateMinionPhoto: (state, action: PayloadAction<{id: string | number, url: string}>) => {
+   updateMinionPhoto: (state, action: PayloadAction<{id: string | number, url: string}>) => {
        const minion = state.data.find(m => m.id === action.payload.id);
        if (minion) {
          minion.img = action.payload.url;
        }
     },
   
-   
-    setLanguageFilter: (state, action: PayloadAction<string>) => {
-      state.filters.language = action.payload;
-    },
-    setSkillsFilter: (state, action: PayloadAction<string[]>) => {
-      state.filters.skills = action.payload;
-    },
-    // ...
+    // Filtros
+    setSearchFilter: (state, action: PayloadAction<string>) => { state.filters.search = action.payload; },
+    setLanguageFilter: (state, action: PayloadAction<string>) => { state.filters.language = action.payload; },
+    setSkillsFilter: (state, action: PayloadAction<string[]>) => { state.filters.skills = action.payload; },
   },
   extraReducers: (builder) => {
     builder
@@ -83,18 +93,30 @@ const minionsSlice = createSlice({
       })
       .addCase(fetchMinions.fulfilled, (state, action) => {
         state.status = 'succeeded';
-   
-        state.data = action.payload;
+        
+        // --- AQUÍ ESTÁ LA MAGIA ---
+        // Al recibir datos "viejos" de la API, los mezclamos con nuestros cambios locales
+        
+        const apiMinions: Minion[] = Array.isArray(action.payload) ? action.payload : [];
+
+        // 1. Aplicamos ediciones: Si tenemos una edición guardada, usamos esa en vez de la de la API
+        const mergedMinions = apiMinions.map(apiMinion => {
+          // Si existe en 'edits', devolvemos el editado. Si no, el de la API.
+          return state.edits[apiMinion.id] || apiMinion;
+        });
+
+        // 2. Combinamos: [Nuevos creados] + [Datos de API fusionados]
+        // Requisito: "La creación... debe visualizarse inmediatamente en la lista" [cite: 119]
+        state.data = [...state.created, ...mergedMinions];
       })
       .addCase(generateMinionImage.fulfilled, (state, action) => {
-        const { id, url } = action.payload;
-      
-      
-        const minion = state.data.find((m) => m.id.toString() === id.toString());
-      
-        if (minion) {
-  
-          minion.img = url;
+       const { id, url } = action.payload;
+        // Buscar y actualizar en data
+        const minionInData = state.data.find(m => m.id.toString() === id.toString());
+        if (minionInData) {
+            minionInData.img = url;
+            // IMPORTANTE: Guardar también en edits para que persista al recargar lista
+            state.edits[id] = { ...minionInData, img: url };
         }
       })
       .addCase(fetchMinions.rejected, (state, action) => {

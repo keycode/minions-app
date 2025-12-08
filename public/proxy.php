@@ -1,5 +1,4 @@
 <?php
-// public/proxy.php (Actualizado para usar cURL con el endpoint de Generación de Imágenes)
 
 header('Access-Control-Allow-Origin: *');
 header('Content-Type: application/json');
@@ -16,16 +15,14 @@ $apiToken = 'AIzaSyCzIVF27F_5IBZDLvhYY66veCjfMQDMtK0';
 $method = $_SERVER['REQUEST_METHOD'];
 $uploadDir = dirname(__DIR__) . '/smartminions/uploads/minion_images/';
 
-// Asegurar carpeta
+
 if (!is_dir($uploadDir)) {
     mkdir($uploadDir, 0755, true);
 }
 
-// ----------------------------------------------------
-// LOGICA POST (Generar Imagen)
-// ----------------------------------------------------
+
 if ($method === 'POST') {
-    // Usamos el modelo que dijiste que tenías disponible
+
     $modelName = 'imagen-4.0-generate-001';
     $aiGenerateUrl = "https://generativelanguage.googleapis.com/v1beta/models/{$modelName}:predict";
 
@@ -43,7 +40,7 @@ if ($method === 'POST') {
     $fileName = $minionId . '.jpg';
     $filePath = $uploadDir . $fileName;
 
-    // Estructura para Imagen en Vertex/Generative AI
+
     $postData = json_encode([
         "instances" => [
             [
@@ -138,7 +135,7 @@ if ($method === 'POST') {
 }
 
 // ----------------------------------------------------
-// LOGICA GET (Proxy existente)
+// POR CORS GUARDO LOS DATOS PARA USARLOS
 // ----------------------------------------------------
 if ($method === 'GET') {
     $baseUrl = "https://minion.globalsmartiot.es";
