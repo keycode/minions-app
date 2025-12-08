@@ -1,17 +1,18 @@
  
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Dashboard } from './pages/Dashboard';
 import { MinionForm } from './pages/MinionForm'; 
 import { Workshop } from './pages/Workshop';
+import { Home } from './pages/Home';
 function App() {
 
 
   return (
  <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Navigate to="/minions" replace />} />
-        
-        {/* Ruta Lista */}
+        <Route path="/" element={<Home />} />
+       
+  
         <Route path="/minions" element={<Dashboard />} />
         
         {/* Rutas Detalle: Importante el orden, primero 'new' para que no lo confunda con un ID */}
