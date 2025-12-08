@@ -18,6 +18,8 @@ npm run dist
 
 - Hay una nueva funcionalidad: seleccionas los Minions que quieras enviar al Taller para crear el Rayo reductor. En esta seccion tambien se puede generar la imagen de los Minions seleccionados con Nano Banana.
 
+- La API Key de Nano Banana esta publica pero no hay peligro, esta limitada
+
 ## Version ONLINE
 
 - El API de Nano Babana no funciona en localhost.
