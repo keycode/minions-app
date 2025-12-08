@@ -4,7 +4,6 @@ import type { Minion } from '../../models/minion';
 //import { MOCK_MINIONS } from '../../services/mockData';
 import { minionsService } from '../../services/minionsService';
 import axios from "axios";
-// Tiene que ser online por el CORS
 
 
 interface MinionsState {
@@ -16,13 +15,13 @@ interface MinionsState {
     language: string;
     skills: string[];
   };
-  // NUEVO: Almacenes de persistencia local
-  edits: Record<string, Minion>; // Diccionario de IDs -> Minion Editado
+ 
+  edits: Record<string, Minion>;  
   created: Minion[];
   
-  workshop: Minion[];      // El "Carrito"
-  groupImage: string | null; // URL de la foto de grupo generada
-  isGeneratingGroup: boolean;// Array de Minions creados manualmente
+  workshop: Minion[];       
+  groupImage: string | null;  
+  isGeneratingGroup: boolean; 
 }
 
 const initialState: MinionsState = {
@@ -191,7 +190,7 @@ export const generateGroupImage = createAsyncThunk(
   async (selectedMinions: Minion[]) => {
 
     const descriptions = selectedMinions.map(m => `${m.nombre} (${m.habilidades.join(', ')})`).join(', ');
-    const prompt = `A complex, cinematic photograph integrating elements from these Minions:  ${descriptions} .The entire image is rendered in the specific visual style of Minions and add the iconic 'Shrink Ray' (Rayo Deductor) weapon from the Minions / Despicable Me franchise. High quality 3D render style, yellow skin, denim overalls.`;
+    const prompt = `A complex, cinematic photograph  size 640x360 integrating elements from these Minions:  ${descriptions} .The entire image is rendered in the specific visual style of Minions and add the iconic 'Shrink Ray' (Rayo Deductor) weapon from the Minions / Despicable Me franchise. High quality 3D render style, yellow skin, denim overalls.`;
     
     // Usamos un ID especial para la foto de grupo
     const groupId = 'mission_squad_' + Date.now();

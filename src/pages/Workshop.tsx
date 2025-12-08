@@ -42,12 +42,12 @@ export const Workshop: React.FC = () => {
         </div>
 
         {/* GRID PRINCIPAL */}
-        {/* CAMBIO 3: En Desktop usamos 3 columnas (2 para lista, 1 para generador) */}
+ 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 md:gap-8">
             
             {/* COLUMNA 1 (LISTA): Ocupa 2 espacios en desktop */}
             {/* Usamos order-2 en móvil si quisiéramos que el generador salga primero, pero aquí mantenemos el orden natural */}
-            <div className="space-y-4 lg:col-span-2">
+            <div className="space-y-4 lg:col-span-1">
                 <div className="flex items-end justify-between">
                     <h2 className="text-lg font-bold text-gray-700 md:text-xl">Equipo Seleccionado ({workshop.length})</h2>
                 </div>
@@ -58,7 +58,7 @@ export const Workshop: React.FC = () => {
                         <button onClick={() => navigate('/minions')} className="mt-4 font-bold text-blue-600 hover:underline">Ir a reclutar</button>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-1 md:gap-4">
                         {workshop.map(minion => (
                             <div key={minion.id} className="flex items-center gap-3 p-3 transition-shadow bg-white border border-gray-100 rounded-lg shadow-sm md:p-4 md:gap-4 hover:shadow-md">
                                 <img src={minion.img || '/uploads/default.png'} alt={minion.nombre} className="object-contain w-12 h-12 border border-gray-200 rounded-full md:w-16 md:h-16 bg-gray-50" />
@@ -80,7 +80,7 @@ export const Workshop: React.FC = () => {
 
             {/* COLUMNA 2 (GENERADOR): Ocupa 1 espacio en desktop */}
             {/* CAMBIO 4: Sticky solo en desktop (lg:sticky). En móvil va al final del flujo normal */}
-            <div className="lg:col-span-1">
+            <div className="lg:col-span-2">
                 <div className="p-5 text-center text-white shadow-xl bg-gradient-to-br from-blue-900 to-purple-900 rounded-xl md:p-6 lg:sticky lg:top-6">
                     <h2 className="mb-2 text-xl font-bold md:text-2xl">Foto de Equipo</h2>
                     <p className="mb-6 text-xs text-blue-200 md:text-sm">Genera una imagen con IA de todos tus minions listos para la misión.</p>
