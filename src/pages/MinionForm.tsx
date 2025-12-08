@@ -8,6 +8,7 @@ import { addMinion, updateMinion } from '../features/minions/minionsSlice';
 import type { Minion } from '../models/minion';
 
 // Componentes
+import { useMinionForm } from '../hooks/useMinionForm';
 import { MultiSelect } from '../components/MultiSelect';
 
 export const MinionForm: React.FC = () => {
@@ -24,12 +25,12 @@ export const MinionForm: React.FC = () => {
 
   // Estado del Formulario
   const [formData, setFormData] = useState<Minion>({
-    id: Date.now(), // ID temporal para nuevos
-    name: '',
+    id: Date.now(), 
+    nombre: '',
     bio: '',
     birth: '',
-    side: 'Minionés Español', // Valor por defecto
-    skills: [],
+    idioma: 'Minionés Español', // Valor por defecto
+    habilidades: [],
     img: 'https://m.media-amazon.com/images/I/71eY2B9sCmL._AC_SL1500_.jpg' // Foto por defecto
   });
 
@@ -54,7 +55,7 @@ export const MinionForm: React.FC = () => {
 
   // Guardar (Create o Update)
   const handleSave = () => {
-    if (!formData.name) return alert('El nombre es obligatorio');
+    if (!formData.nombre) return alert('El nombre es obligatorio');
 
     if (isNew) {
       // Crear nuevo
@@ -70,7 +71,7 @@ export const MinionForm: React.FC = () => {
 
   // Listas para selects
   const languageOptions = ['Minionés Español', 'Minionés Inglés', 'Minionés Portugués', 'Minionés Cantonés'];
-  const skillOptions = ['Mecánico', 'Físico', 'Químico', 'Arquitecto', 'Músico', 'Villano'];
+  const habilidadesOptions = ['Mecánico', 'Físico', 'Químico', 'Arquitecto', 'Músico', 'Villano'];
 
   return (
     <div className="min-h-screen bg-gray-50 p-6 font-sans">
@@ -117,12 +118,20 @@ export const MinionForm: React.FC = () => {
             </div>
         </div>
 
-        {/* TARJETA PRINCIPAL (Layout 2 columnas) */}
         <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 flex flex-col md:flex-row">
             
             {/* COLUMNA IZQUIERDA: Foto */}
             <div className="w-full md:w-1/3 bg-gray-50 p-8 flex flex-col items-center justify-start border-r border-gray-100">
-                <div className="w-48 h-48 rounded-full overflow-hidden border-4 border-yellow-400 shadow-inner mb-4 bg-white">
+                      <div className="w-48 h-48 rounded-full overflow-hidden border-4 border-yellow-400 shadow-inner mb-4 bg-white">
+                          {isEditing && (
+                  <button 
+        type="button" // Importante type="button" para no enviar el form (submit)
+        onClick={handleGenerateAiImage}
+        className="mt-4 flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded shadow hover:bg-purple-700 transition"
+    >
+        ✨ Generar con Nano Banana
+    </button>
+                )}
                     <img src={formData.img} alt="Minion" className="w-full h-full object-contain" />
                 </div>
                 {/* Input URL foto (solo editable) */}
@@ -152,7 +161,7 @@ export const MinionForm: React.FC = () => {
                             type="text" 
                             name="name"
                             disabled={!isEditing}
-                            value={formData.name}
+                            value={formData.nombre}
                             onChange={handleChange}
                             className={`w-full p-3 rounded-lg border ${isEditing ? 'border-gray-300 bg-white focus:ring-2 focus:ring-blue-500' : 'border-transparent bg-gray-50 font-bold text-lg'}`}
                         />
@@ -164,14 +173,14 @@ export const MinionForm: React.FC = () => {
                         {isEditing ? (
                             <select 
                                 name="side"
-                                value={formData.side}
+                                value={formData.idioma}
                                 onChange={handleChange}
                                 className="w-full p-3 border border-gray-300 rounded-lg bg-white"
                             >
                                 {languageOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                             </select>
                         ) : (
-                            <div className="p-3 bg-gray-50 rounded-lg border border-transparent text-gray-700">{formData.side}</div>
+                            <div className="p-3 bg-gray-50 rounded-lg border border-transparent text-gray-700">{formData.habilidades}</div>
                         )}
                     </div>
 
@@ -194,18 +203,18 @@ export const MinionForm: React.FC = () => {
                         {isEditing ? (
                             <MultiSelect 
                                 label="Seleccionar habilidades"
-                                options={skillOptions}
-                                selected={formData.skills}
+                                options={habilidadesOptions}
+                                selected={formData.habilidades}
                                 onChange={(skills) => setFormData(prev => ({ ...prev, skills }))}
                             />
                         ) : (
                             <div className="flex flex-wrap gap-2 mt-2">
-                                {formData.skills.map(skill => (
-                                    <span key={skill} className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium border border-yellow-200">
-                                        {skill}
+                                {formData.habilidades.map(habilida => (
+                                    <span key={habilida} className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium border border-yellow-200">
+                                        {habilida}
                                     </span>
                                 ))}
-                                {formData.skills.length === 0 && <span className="text-gray-400 italic">Sin habilidades... todavía</span>}
+                                {formData.habilidades.length === 0 && <span className="text-gray-400 italic">Sin habilidades... todavía</span>}
                             </div>
                         )}
                     </div>

@@ -2,7 +2,7 @@ import axios from 'axios';
 import type { Minion } from '../models/minion';
 import { MOCK_MINIONS } from './mockData';
 
-const API_URL = 'https://minion.globalsmartiot.es';
+const API_URL = '/api';
 
 export const minionsService = {
   /**

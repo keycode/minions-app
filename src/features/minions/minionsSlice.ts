@@ -3,7 +3,8 @@ import type { PayloadAction } from '@reduxjs/toolkit';
 import type { Minion } from '../../models/minion';
 //import { MOCK_MINIONS } from '../../services/mockData';
 import { minionsService } from '../../services/minionsService';
-
+import axios from "axios";
+// Tiene que ser online por el CORS
 
 
 interface MinionsState {
@@ -59,8 +60,12 @@ const minionsSlice = createSlice({
     setSearchFilter: (state, action: PayloadAction<string>) => {
       state.filters.search = action.payload;
     },
-      // Aquí añadiremos más reducers para otros filtros luego
-    
+    updateMinionPhoto: (state, action: PayloadAction<{id: string | number, url: string}>) => {
+       const minion = state.data.find(m => m.id === action.payload.id);
+       if (minion) {
+         minion.img = action.payload.url;
+       }
+    },
   
    
     setLanguageFilter: (state, action: PayloadAction<string>) => {
@@ -78,10 +83,19 @@ const minionsSlice = createSlice({
       })
       .addCase(fetchMinions.fulfilled, (state, action) => {
         state.status = 'succeeded';
-        // Nota: Al cargar nueva página, reemplazamos data.
-        // Si quisieras mantener editados, la lógica sería más compleja, 
-        // pero para la prueba, cargar la página reemplaza la vista actual.
-        state.data = action.payload; 
+   
+        state.data = action.payload;
+      })
+      .addCase(generateMinionImage.fulfilled, (state, action) => {
+        const { id, url } = action.payload;
+      
+      
+        const minion = state.data.find((m) => m.id.toString() === id.toString());
+      
+        if (minion) {
+  
+          minion.img = url;
+        }
       })
       .addCase(fetchMinions.rejected, (state, action) => {
         state.status = 'failed';
@@ -90,12 +104,35 @@ const minionsSlice = createSlice({
   },
 });
 
+
+
+export const generateMinionImage = createAsyncThunk(
+  'minions/generateImage',
+  async ({ id, prompt }: { id: string | number; prompt: string }) => {
+    
+    // Llamada a tu Proxy PHP
+    // Nota: Asegúrate de que la URL apunte a donde tienes el proxy (ej: /proxy.php o /api/...)
+    const response = await axios.post('/proxy.php', {
+      id,
+      prompt
+    });
+
+    // Validamos que el PHP haya devuelto success
+    if (response.data.success) {
+      // Devolvemos el ID y la nueva URL para que el Reducer lo use
+      return { id, url: response.data.url };
+    } else {
+      throw new Error(response.data.error || 'Error generando imagen');
+    }
+  }
+);
+
 export const { 
   addMinion, 
   updateMinion, 
   deleteMinion, 
   setSearchFilter, 
   setLanguageFilter, 
-  setSkillsFilter 
+  setSkillsFilter , updateMinionPhoto
 } = minionsSlice.actions;
 export default minionsSlice.reducer;

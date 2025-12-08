@@ -135,12 +135,12 @@ export const Dashboard: React.FC = () => {
               ) : currentMinions.length > 0 ? (
                 currentMinions.map((minion) => (
                   <tr key={minion.id} className="hover:bg-blue-50 border-b border-gray-100 transition-colors">
-                    <td className="p-4 font-medium">{minion.name}</td>
-                    <td className="p-4">{minion.side}</td>
+                    <td className="p-4 font-medium">{minion.nombre}</td>
+                    <td className="p-4">{minion.idioma}</td>
                     <td className="p-4">
                         <div className="flex flex-wrap gap-1">
                            {/* Renderizamos las habilidades separadas por coma */}
-                            {minion.skills.join(', ')}
+                            {minion.habilidades.join(', ')}
                         </div>
                     </td>
                     <td className="p-4">
