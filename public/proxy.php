@@ -9,7 +9,7 @@ error_reporting(E_ALL);
 
 
 
-$apiToken = 'AIzaSyCzIVF27F_5IBZDLvhYY66veCjfMQDMtK0';
+$apiToken = '';
 
 
 $method = $_SERVER['REQUEST_METHOD'];
